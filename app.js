@@ -6,7 +6,7 @@ var logger = require('morgan');
 var db = require('./conexion/mogoose')
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' }); // Puedes ajustar la configuración según tus necesidades
-
+const cors = require('cors');
 
 
 var indexRouter = require('./routes/index');
@@ -19,7 +19,7 @@ var bookRouter = require('./routes/book');
 var authRouter = require('./routes/authentication'); 
 
 var app = express();
-
+app.use(cors());
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
