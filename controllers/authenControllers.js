@@ -4,17 +4,23 @@ const bcrypt = require('bcrypt');
 
 exports.createAuthentication = async (req, res) => {
   try {
-    const { correo, contrasenia, usuarioId } = req.body;
+    const { correo, contrasenia, username } = req.body;
 
     // Verifica que todos los campos requeridos estén presentes
-    if (!correo || !contrasenia || !usuarioId) {
+    if (!correo || !contrasenia || !username) {
       return res.status(400).json({ error: 'Todos los campos son obligatorios' });
     }
 
-    // Verifica que el usuario exista
-    const usuarioExistente = await User.findById(usuarioId);
+    // Busca al usuario por su username
+    const usuarioExistente = await User.findOne({ username });
     if (!usuarioExistente) {
       return res.status(400).json({ error: 'Usuario no encontrado' });
+    }
+
+    // Verifica si ya existe una autenticación para el correo proporcionado
+    const autenticacionExistente = await Autentificacion.findOne({ correo });
+    if (autenticacionExistente) {
+      return res.status(400).json({ error: 'Ya existe una autenticación para este correo' });
     }
 
     // Hashea la contraseña
@@ -24,7 +30,7 @@ exports.createAuthentication = async (req, res) => {
     const nuevaAutentificacion = new Autentificacion({
       correo,
       contrasenia: hashedPassword,
-      usuario: usuarioId,
+      usuario: usuarioExistente._id,  // Usa el ObjectId del usuario encontrado
     });
 
     // Guarda la autenticación en la base de datos
@@ -74,9 +80,9 @@ exports.updateAuthentication = async (req, res) => {
 exports.deleteAuthentication = async (req, res) => {
   try {
     const autentificacion = await Autentificacion.findByIdAndDelete(req.params.id);
-    if (!autentificacion) return res.status(404).json({ error: 'Autenticación no encontrada' });
+    if (!autenticacion) return res.status(404).json({ error: 'Autenticación no encontrada' });
     res.status(200).json({ message: 'Autenticación eliminada exitosamente' });
   } catch (err) {
-    res.status(500).json({ error: err.message});
+    res.status(500).json({ error: err.message });
   }
 };
